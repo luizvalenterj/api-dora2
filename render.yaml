@@ -19,7 +19,8 @@ services:
         sync: false
       - key: ALGOLIA_SEARCH_API_KEY
         sync: false
+      # Nome do indice nao e secret.
       - key: ALGOLIA_INDEX_NAME
-        sync: false
+        value: cobertura_convenios_planos
       - key: API_ACCESS_KEY
         sync: false

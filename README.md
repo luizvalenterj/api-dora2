@@ -111,7 +111,7 @@ Copie `.env.example` e preencha. As variáveis são validadas com Zod no startup
 | --- | --- | --- | --- |
 | `ALGOLIA_APP_ID` | sim | — | Application ID do Algolia |
 | `ALGOLIA_SEARCH_API_KEY` | sim | — | Search API Key (**nunca** a Admin Key) |
-| `ALGOLIA_INDEX_NAME` | sim | — | Nome do índice de cobertura |
+| `ALGOLIA_INDEX_NAME` | sim | — | Nome do índice de cobertura (`cobertura_convenios_planos`) |
 | `API_ACCESS_KEY` | recomendada | — | Bearer token exigido em `/v1/search`. Ausente, a autenticação fica desligada e um warning é logado |
 | `ALGOLIA_TIMEOUT_MS` | não | `8000` | Timeout da chamada ao Algolia (`AbortController`) |
 | `LOG_LEVEL` | não | `info` | `fatal`…`trace`, `silent` |
@@ -168,7 +168,7 @@ Os testes de integração vivem em `tests/integration/` e são **pulados por pad
 RUN_INTEGRATION=1 \
 ALGOLIA_APP_ID=... \
 ALGOLIA_SEARCH_API_KEY=... \
-ALGOLIA_INDEX_NAME=... \
+ALGOLIA_INDEX_NAME=cobertura_convenios_planos \
 npm run test:integration
 ```
 
@@ -179,7 +179,7 @@ Para uma checagem manual e legível do índice, existe também um smoke test que
 ```bash
 ALGOLIA_APP_ID=... \
 ALGOLIA_SEARCH_API_KEY=... \
-ALGOLIA_INDEX_NAME=... \
+ALGOLIA_INDEX_NAME=cobertura_convenios_planos \
 npm run smoke -- "Bradesco Nacional Flex"
 ```
 
@@ -448,7 +448,7 @@ O [`render.yaml`](./render.yaml) já descreve o serviço (nenhum secret versiona
 Passos:
 
 1. Crie um Web Service apontando para este repositório (ou use o Blueprint com `render.yaml`).
-2. Configure as variáveis marcadas com `sync: false` no dashboard: `ALGOLIA_APP_ID`, `ALGOLIA_SEARCH_API_KEY`, `ALGOLIA_INDEX_NAME` e `API_ACCESS_KEY`.
+2. Configure no dashboard os secrets marcados com `sync: false`: `ALGOLIA_APP_ID`, `ALGOLIA_SEARCH_API_KEY` e `API_ACCESS_KEY` (o `ALGOLIA_INDEX_NAME` já vem no arquivo).
 3. Faça o deploy e valide com `curl https://SEU-SERVICO.onrender.com/health`.
 
 A aplicação escuta em `0.0.0.0` na porta de `PORT` — o Render não roteia tráfego para `localhost`.
