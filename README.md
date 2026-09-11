@@ -148,7 +148,9 @@ Scripts disponíveis:
 | `npm run build` | Compila TypeScript para `dist/` |
 | `npm start` | Executa o código compilado |
 | `npm test` | Roda os testes (Vitest) |
-| `npm run typecheck` | Type-check de `src/` **e** `tests/` |
+| `npm run typecheck` | Type-check de `src/`, `tests/` e `scripts/` |
+| `npm run test:integration` | Testes contra o índice Algolia real (opt-in) |
+| `npm run smoke -- "texto"` | Consulta o índice real e imprime os casos de uso |
 
 ## Testes
 
@@ -158,7 +160,30 @@ npm test
 
 Os testes unitários não dependem do Algolia real nem de rede: `tests/helpers/fake-algolia.ts` é um Algolia falso e determinístico que interpreta a expressão de filtros gerada pela API sobre um dataset sintético. Cobrem filter builder e escaping, scope builder, deduplicação, extração de serviços, cliente Algolia (timeout e HTTP 400/403/500 sem vazar credenciais), autenticação Bearer e o contrato HTTP completo.
 
-Testes de integração contra o índice real não estão incluídos; quando forem adicionados, devem ficar em arquivo separado e ser condicionados a variáveis de ambiente próprias.
+### Contra o índice real (opt-in)
+
+Os testes de integração vivem em `tests/integration/` e são **pulados por padrão**. Rodam apenas com `RUN_INTEGRATION=1` e as credenciais no ambiente:
+
+```bash
+RUN_INTEGRATION=1 \
+ALGOLIA_APP_ID=... \
+ALGOLIA_SEARCH_API_KEY=... \
+ALGOLIA_INDEX_NAME=... \
+npm run test:integration
+```
+
+As asserções são agnósticas ao dataset: pegam um registro real do índice e a partir dele validam o schema, a resolução textual do plano, a deduplicação por ID, os serviços da relação plano + unidade e o filtro geográfico.
+
+Para uma checagem manual e legível do índice, existe também um smoke test que imprime o resultado de cada caso de uso:
+
+```bash
+ALGOLIA_APP_ID=... \
+ALGOLIA_SEARCH_API_KEY=... \
+ALGOLIA_INDEX_NAME=... \
+npm run smoke -- "Bradesco Nacional Flex"
+```
+
+O argumento de texto é opcional — sem ele, o script descobre um plano a partir de uma amostra do próprio índice.
 
 ## Contrato HTTP
 
@@ -452,8 +477,10 @@ api-dora2/
 │   └── types/
 │       ├── algolia.ts             # tipos do índice e da resposta do Algolia
 │       └── api.ts                 # tipos da resposta da API
+├── scripts/smoke.ts               # checagem manual contra o índice real
 ├── tests/
 │   ├── helpers/fake-algolia.ts    # Algolia falso determinístico + dataset sintético
+│   ├── integration/               # testes contra o índice real (opt-in)
 │   ├── algolia-client.test.ts
 │   ├── api.test.ts
 │   ├── auth.test.ts
