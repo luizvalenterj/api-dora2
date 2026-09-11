@@ -86,6 +86,12 @@ describe("createAlgoliaClient", () => {
     expect(serialized).not.toContain(CONFIG.apiKey);
     expect(serialized).not.toContain(CONFIG.appId);
     expect(serialized).not.toContain(String(status));
+
+    // A mensagem de log guarda o diagnostico, com a chave redigida.
+    expect(appError.message).toContain(`HTTP ${status}`);
+    expect(appError.message).toContain("Invalid Application-ID or API key");
+    expect(appError.message).not.toContain(CONFIG.apiKey);
+    expect(appError.message).toContain("[REDACTED]");
   });
 
   it("aborta por timeout e devolve ALGOLIA_TIMEOUT", async () => {

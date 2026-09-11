@@ -88,7 +88,13 @@ export function createAlgoliaClient(config: AlgoliaClientConfig): AlgoliaSearchF
       });
 
       if (!response.ok) {
-        throw AppError.algolia(`Algolia responded with HTTP ${response.status}.`);
+        // Trecho do corpo vai so para o log: e o que diferencia erro de
+        // credencial, de indice e bloqueio de rede. A chave e removida antes.
+        const body = await response.text().catch(() => "");
+        const snippet = body.replace(config.apiKey, "[REDACTED]").slice(0, 200).trim();
+        throw AppError.algolia(
+          `Algolia responded with HTTP ${response.status}.${snippet === "" ? "" : ` Body: ${snippet}`}`,
+        );
       }
 
       return parseResponse(await response.json());

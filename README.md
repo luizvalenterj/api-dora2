@@ -127,11 +127,17 @@ npm install
 npm run dev
 ```
 
-`npm run dev` usa `tsx watch` e recarrega a cada alteração. Um `.env` não é lido automaticamente — exporte as variáveis ou use `node --env-file=.env`:
+Crie um arquivo **`.env` na raiz do projeto** (já está no `.gitignore`, então nunca é versionado):
 
-```bash
-node --env-file=.env --import tsx src/server.ts
+```env
+ALGOLIA_APP_ID=seu-app-id
+ALGOLIA_SEARCH_API_KEY=sua-search-api-key
+ALGOLIA_INDEX_NAME=cobertura_convenios_planos
+API_ACCESS_KEY=uma-chave-qualquer-para-uso-local
+PORT=3000
 ```
+
+`npm run dev`, `npm start` e `npm run smoke` carregam esse arquivo automaticamente (via `--env-file-if-exists` do Node) — sem `.env`, valem as variáveis já exportadas no ambiente. `npm run dev` usa `tsx watch` e recarrega a cada alteração.
 
 ## Build e produção
 
@@ -177,11 +183,10 @@ As asserções são agnósticas ao dataset: pegam um registro real do índice e 
 Para uma checagem manual e legível do índice, existe também um smoke test que imprime o resultado de cada caso de uso:
 
 ```bash
-ALGOLIA_APP_ID=... \
-ALGOLIA_SEARCH_API_KEY=... \
-ALGOLIA_INDEX_NAME=cobertura_convenios_planos \
 npm run smoke -- "Bradesco Nacional Flex"
 ```
+
+Com as credenciais no `.env` não é preciso passar nada; sem ele, exporte `ALGOLIA_APP_ID`, `ALGOLIA_SEARCH_API_KEY` e `ALGOLIA_INDEX_NAME` antes.
 
 O argumento de texto é opcional — sem ele, o script descobre um plano a partir de uma amostra do próprio índice.
 
