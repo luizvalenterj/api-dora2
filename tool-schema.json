@@ -1,0 +1,57 @@
+{
+  "name": "search_health_network",
+  "description": "Consulta a rede credenciada e permite localizar convenios, planos, unidades e servicos, alem de verificar relacoes entre essas entidades. Use busca textual (query) para identificar uma entidade e, depois de conhecer o ID, prefira os campos id_convenio, id_plano e id_unidade para validar relacoes.",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "query": {
+        "type": "string",
+        "description": "Texto livre para localizar uma entidade (nome de plano, convenio, unidade, cidade ou bairro)."
+      },
+      "id_convenio": {
+        "type": "integer",
+        "description": "ID exato do convenio, quando ja conhecido."
+      },
+      "id_plano": {
+        "type": "integer",
+        "description": "ID exato do plano, quando ja conhecido."
+      },
+      "id_unidade": {
+        "type": "integer",
+        "description": "ID exato da unidade, quando ja conhecido."
+      },
+      "servico": {
+        "type": "string",
+        "description": "Servico a filtrar, exatamente como aparece no indice (ex.: consultas, exames, emergencia, internacao)."
+      },
+      "cidade": {
+        "type": "string",
+        "description": "Cidade da unidade, para filtro exato."
+      },
+      "bairro": {
+        "type": "string",
+        "description": "Bairro da unidade, para filtro exato."
+      },
+      "search_scope": {
+        "type": "string",
+        "enum": ["all", "convenio", "plano", "unidade", "localizacao"],
+        "default": "all",
+        "description": "Restringe em quais campos a busca textual ocorre. Só tem efeito quando query e informado."
+      },
+      "return_type": {
+        "type": "string",
+        "enum": ["records", "convenios", "planos", "unidades", "servicos"],
+        "description": "Formato do resultado: records (registros de cobertura), convenios, planos, unidades ou servicos distintos."
+      },
+      "limit": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 100,
+        "default": 20,
+        "description": "Numero maximo de itens retornados."
+      }
+    },
+    "required": ["return_type"],
+    "additionalProperties": false
+  }
+}

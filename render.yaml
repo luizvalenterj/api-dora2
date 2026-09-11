@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: health-network-api
+    runtime: node
+    plan: starter
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: LOG_LEVEL
+        value: info
+      - key: ALGOLIA_TIMEOUT_MS
+        value: "8000"
+      # Secrets NAO ficam versionados: definir no dashboard do Render.
+      - key: ALGOLIA_APP_ID
+        sync: false
+      - key: ALGOLIA_SEARCH_API_KEY
+        sync: false
+      - key: ALGOLIA_INDEX_NAME
+        sync: false
+      - key: API_ACCESS_KEY
+        sync: false

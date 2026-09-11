@@ -1,0 +1,28 @@
+{
+  "name": "health-network-api",
+  "version": "1.0.0",
+  "private": true,
+  "description": "API intermediaria entre agentes LLM e o indice Algolia de rede credenciada",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/server.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc -p tsconfig.test.json"
+  },
+  "dependencies": {
+    "fastify": "^5.12.4",
+    "zod": "^4.6.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.2",
+    "tsx": "^4.23.13",
+    "typescript": "^5.9.3",
+    "vitest": "^5.0.0"
+  }
+}
