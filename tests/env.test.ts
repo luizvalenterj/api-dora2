@@ -16,6 +16,22 @@ describe("loadEnv", () => {
     expect(env.API_ACCESS_KEY).toBeUndefined();
   });
 
+  it("escuta apenas em loopback fora de producao", () => {
+    expect(loadEnv({ ...REQUIRED }).HOST).toBe("127.0.0.1");
+    expect(loadEnv({ ...REQUIRED, NODE_ENV: "development" }).HOST).toBe("127.0.0.1");
+  });
+
+  it("escuta em todas as interfaces em producao", () => {
+    expect(loadEnv({ ...REQUIRED, NODE_ENV: "production" }).HOST).toBe("0.0.0.0");
+  });
+
+  it("HOST explicito tem precedencia sobre o padrao", () => {
+    expect(loadEnv({ ...REQUIRED, NODE_ENV: "production", HOST: "127.0.0.1" }).HOST).toBe(
+      "127.0.0.1",
+    );
+    expect(loadEnv({ ...REQUIRED, HOST: "0.0.0.0" }).HOST).toBe("0.0.0.0");
+  });
+
   it("converte numeros vindos como string", () => {
     const env = loadEnv({ ...REQUIRED, PORT: "10000", ALGOLIA_TIMEOUT_MS: "1500" });
     expect(env.PORT).toBe(10_000);

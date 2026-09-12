@@ -37,8 +37,9 @@ async function main(): Promise<void> {
     });
   }
 
-  // Render exige bind em 0.0.0.0 — `localhost` nao recebe trafego externo.
-  await app.listen({ port: env.PORT, host: "0.0.0.0" });
+  // Local: 127.0.0.1 (so a propria maquina). Producao: 0.0.0.0, exigido pelo
+  // Render. Veja HOST em src/config/env.ts.
+  await app.listen({ port: env.PORT, host: env.HOST });
 }
 
 main().catch((error: unknown) => {

@@ -117,6 +117,7 @@ Copie `.env.example` e preencha. As variáveis são validadas com Zod no startup
 | `LOG_LEVEL` | não | `info` | `fatal`…`trace`, `silent` |
 | `NODE_ENV` | não | `development` | `development` \| `test` \| `production` |
 | `PORT` | não | `3000` | Porta HTTP (o Render injeta a sua) |
+| `HOST` | não | `127.0.0.1` local / `0.0.0.0` em produção | Interface de escuta |
 
 As credenciais do Algolia ficam confinadas ao módulo `src/services/algolia-client.ts` e nunca são logadas nem devolvidas em respostas de erro. O agente recebe apenas o `API_ACCESS_KEY`.
 
@@ -138,6 +139,10 @@ PORT=3000
 ```
 
 `npm run dev`, `npm start` e `npm run smoke` carregam esse arquivo automaticamente (via `--env-file-if-exists` do Node) — sem `.env`, valem as variáveis já exportadas no ambiente. `npm run dev` usa `tsx watch` e recarrega a cada alteração.
+
+Fora de produção o servidor escuta **apenas em `127.0.0.1`**: ele responde a `http://localhost:3000` na própria máquina e recusa qualquer conexão vinda da rede. Nada fica exposto e não é preciso liberar porta em firewall. Para expor deliberadamente (um container, outra máquina da rede), defina `HOST=0.0.0.0` — e aí configure `API_ACCESS_KEY`, porque a API deixa de estar protegida pelo isolamento de rede.
+
+A única conexão de saída é a consulta ao Algolia, que é a fonte de dados da API.
 
 ## Build e produção
 
@@ -456,7 +461,7 @@ Passos:
 2. Configure no dashboard os secrets marcados com `sync: false`: `ALGOLIA_APP_ID`, `ALGOLIA_SEARCH_API_KEY` e `API_ACCESS_KEY` (o `ALGOLIA_INDEX_NAME` já vem no arquivo).
 3. Faça o deploy e valide com `curl https://SEU-SERVICO.onrender.com/health`.
 
-A aplicação escuta em `0.0.0.0` na porta de `PORT` — o Render não roteia tráfego para `localhost`.
+Com `NODE_ENV=production` (já no `render.yaml`) a aplicação escuta em `0.0.0.0` na porta de `PORT` — o Render não roteia tráfego para `localhost`.
 
 ## Estrutura do projeto
 

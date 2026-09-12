@@ -8,6 +8,12 @@ import { z } from "zod";
 const envSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   PORT: z.coerce.number().int().min(1).max(65535).default(3000),
+  /**
+   * Interface de escuta. Fora de producao o padrao e `127.0.0.1`: o servidor
+   * so aceita conexoes da propria maquina, sem ficar visivel na rede local.
+   * Em producao o padrao e `0.0.0.0`, exigido por plataformas como o Render.
+   */
+  HOST: z.string().min(1).optional(),
   LOG_LEVEL: z
     .enum(["fatal", "error", "warn", "info", "debug", "trace", "silent"])
     .default("info"),
@@ -18,7 +24,11 @@ const envSchema = z.object({
   ALGOLIA_TIMEOUT_MS: z.coerce.number().int().min(100).max(60_000).default(8000),
 
   API_ACCESS_KEY: z.string().min(1).optional(),
-});
+})
+  .transform((values) => ({
+    ...values,
+    HOST: values.HOST ?? (values.NODE_ENV === "production" ? "0.0.0.0" : "127.0.0.1"),
+  }));
 
 export type Env = z.infer<typeof envSchema>;
 

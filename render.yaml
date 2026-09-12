@@ -8,6 +8,8 @@ services:
     healthCheckPath: /health
     autoDeploy: true
     envVars:
+      # NODE_ENV=production faz o servidor escutar em 0.0.0.0, como o Render
+      # exige. Localmente o padrao e 127.0.0.1.
       - key: NODE_ENV
         value: production
       - key: LOG_LEVEL
