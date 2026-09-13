@@ -164,6 +164,7 @@ Scripts disponíveis:
 | `npm run typecheck` | Type-check de `src/`, `tests/` e `scripts/` |
 | `npm run test:integration` | Testes contra o índice Algolia real (opt-in) |
 | `npm run smoke -- "texto"` | Consulta o índice real e imprime os casos de uso |
+| `npm run proxy:detect` | Descobre e testa o proxy de saída da rede |
 
 ## Testes
 
@@ -502,7 +503,20 @@ A aplicação aplica o proxy explicitamente: basta definir a variável no `.env`
 HTTPS_PROXY=http://proxy.empresa.local:8080
 ```
 
-Para descobrir o endereço no Windows:
+Para descobrir o endereço, rode o detector — funciona igual no Prompt de Comando, no PowerShell e no terminal do VS Code:
+
+```bash
+npm run proxy:detect
+```
+
+Ele lê a configuração de proxy do Windows (inclusive o PAC, extraindo os proxies declarados), testa a conexão direta e cada candidato, mostra a resposta de cada tentativa e imprime a linha pronta para o `.env`. Também aceita um PAC ou proxy explícito:
+
+```bash
+npm run proxy:detect -- http://pac.empresa.local/proxy.pac
+npm run proxy:detect -- http://proxy.empresa.local:8080
+```
+
+Manualmente, no PowerShell:
 
 ```powershell
 netsh winhttp show proxy
