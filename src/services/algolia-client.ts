@@ -43,6 +43,24 @@ function isAbortError(error: unknown): boolean {
   return error instanceof Error && (error.name === "AbortError" || error.name === "TimeoutError");
 }
 
+/**
+ * Percorre a cadeia de `cause`. Num `TypeError: fetch failed` a razao real
+ * (ENOTFOUND, ECONNREFUSED, certificado nao confiavel) vive na causa, nunca
+ * na mensagem de cima — sem isso o log nao diagnostica nada.
+ */
+function describeError(error: unknown): string {
+  const parts: string[] = [];
+  let current: unknown = error;
+
+  for (let depth = 0; current instanceof Error && depth < 4; depth += 1) {
+    const code = (current as NodeJS.ErrnoException).code;
+    parts.push(`${current.name}: ${current.message}${code === undefined ? "" : ` [${code}]`}`);
+    current = current.cause;
+  }
+
+  return parts.length > 0 ? parts.join(" <- ") : "unknown error";
+}
+
 function parseResponse(payload: unknown): AlgoliaResponse {
   if (typeof payload !== "object" || payload === null) {
     throw AppError.algolia("Algolia returned a non-object payload.");
@@ -104,8 +122,9 @@ export function createAlgoliaClient(config: AlgoliaClientConfig): AlgoliaSearchF
         throw AppError.algoliaTimeout(`Algolia request aborted after ${config.timeoutMs}ms.`);
       }
       // Mensagem tecnica so no log; o cliente recebe texto generico.
-      const reason = error instanceof Error ? `${error.name}: ${error.message}` : "unknown error";
-      throw AppError.algolia(`Algolia request failed before a response was parsed (${reason}).`);
+      throw AppError.algolia(
+        `Algolia request failed before a response was parsed (${describeError(error)}).`,
+      );
     } finally {
       clearTimeout(timeout);
     }

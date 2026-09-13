@@ -125,4 +125,34 @@ describe("createAlgoliaClient", () => {
     const error = await client({ query: "x" }).catch((caught: unknown) => caught);
     expect((error as AppError).code).toBe("ALGOLIA_ERROR");
   });
+
+  it("registra a causa raiz da falha de rede no log", async () => {
+    const cause = Object.assign(new Error("getaddrinfo ENOTFOUND appid.algolia.net"), {
+      code: "ENOTFOUND",
+    });
+    const fetchImpl = vi.fn(async () => {
+      throw new TypeError("fetch failed", { cause });
+    });
+    const client = createAlgoliaClient({ ...CONFIG, fetchImpl: fetchImpl as unknown as typeof fetch });
+
+    const error = (await client({ query: "x" }).catch((caught: unknown) => caught)) as AppError;
+
+    expect(error.message).toContain("TypeError: fetch failed");
+    expect(error.message).toContain("ENOTFOUND");
+    // A causa fica so no log; a resposta HTTP segue generica.
+    expect(error.publicMessage).toBe("Unable to query search provider.");
+  });
+
+  it("registra causa de certificado nao confiavel", async () => {
+    const cause = Object.assign(new Error("unable to verify the first certificate"), {
+      code: "UNABLE_TO_VERIFY_LEAF_SIGNATURE",
+    });
+    const fetchImpl = vi.fn(async () => {
+      throw new TypeError("fetch failed", { cause });
+    });
+    const client = createAlgoliaClient({ ...CONFIG, fetchImpl: fetchImpl as unknown as typeof fetch });
+
+    const error = (await client({ query: "x" }).catch((caught: unknown) => caught)) as AppError;
+    expect(error.message).toContain("UNABLE_TO_VERIFY_LEAF_SIGNATURE");
+  });
 });

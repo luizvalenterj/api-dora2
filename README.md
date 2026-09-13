@@ -24,6 +24,7 @@ Algolia determina a verdade.
 - [Tool do LLM](#tool-do-llm)
 - [Exemplos curl](#exemplos-curl)
 - [Deploy no Render](#deploy-no-render)
+- [Solução de problemas](#solução-de-problemas)
 - [Estrutura do projeto](#estrutura-do-projeto)
 - [Decisões técnicas](#decisões-técnicas)
 
@@ -462,6 +463,35 @@ Passos:
 3. Faça o deploy e valide com `curl https://SEU-SERVICO.onrender.com/health`.
 
 Com `NODE_ENV=production` (já no `render.yaml`) a aplicação escuta em `0.0.0.0` na porta de `PORT` — o Render não roteia tráfego para `localhost`.
+
+## Solução de problemas
+
+### `502 ALGOLIA_ERROR` com `TypeError: fetch failed`
+
+Falha de rede antes de qualquer resposta HTTP. O log do servidor traz a cadeia de causas — é ela que diz o que fazer:
+
+| Causa no log | Significado | Caminho |
+| --- | --- | --- |
+| `ENOTFOUND` | DNS não resolveu o host | Rede/VPN sem acesso ao domínio, ou proxy obrigatório |
+| `ECONNREFUSED` / `ETIMEDOUT` | Conexão bloqueada | Firewall corporativo; liberar `*.algolia.net` e `*.algolianet.com` |
+| `UNABLE_TO_VERIFY_LEAF_SIGNATURE` / `SELF_SIGNED_CERT_IN_CHAIN` | TLS interceptado por proxy corporativo | Apontar `NODE_EXTRA_CA_CERTS` para o certificado raiz da empresa |
+| `Host not in allowlist` (com HTTP 403) | Egresso bloqueado por política do ambiente | Liberar o host nas configurações de rede do ambiente |
+
+Para ver a causa direto, sem subir o servidor:
+
+```bash
+node --env-file-if-exists=.env -e 'fetch(`https://${process.env.ALGOLIA_APP_ID}.algolia.net/1/indexes`).then(r=>console.log("HTTP",r.status)).catch(e=>console.log(e.name,e.message,"|",e.cause?.code,e.cause?.message))'
+```
+
+Com TLS interceptado, aponte o certificado raiz da empresa (formato PEM) e rode de novo:
+
+```bash
+NODE_EXTRA_CA_CERTS=/caminho/para/raiz-corporativa.pem npm start
+```
+
+Nunca use `NODE_TLS_REJECT_UNAUTHORIZED=0`: isso desliga a verificação de certificado para todas as conexões do processo.
+
+**Proxy explícito:** o `fetch` do Node 22 **ignora** `HTTP_PROXY`/`HTTPS_PROXY` — diferente do curl e do navegador. Se a saída da sua rede exige proxy, a aplicação precisa de um `ProxyAgent` (pacote `undici`); hoje ela não tem isso.
 
 ## Estrutura do projeto
 
