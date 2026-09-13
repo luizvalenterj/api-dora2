@@ -515,6 +515,10 @@ Se só aparecer `AutoConfigURL`, a rede usa PAC: abra essa URL no navegador e pr
 
 Com proxy configurado, o log de inicialização registra `outbound requests go through a proxy`, e uma recusa do próprio proxy aparece como `Proxy response (403) !== 200 when HTTP Tunneling`.
 
+**Autenticação de proxy:** só o esquema Basic é suportado, embutido na URL (`http://usuario:senha@proxy:8080`). Proxies que exigem NTLM ou Kerberos (`Proxy response (407)` mesmo com usuário e senha) precisam de uma ponte local — `px` ou `cntlm` — apontando `HTTPS_PROXY` para ela.
+
+**Proxy que inspeciona TLS:** exporte a raiz corporativa do repositório de certificados do Windows para PEM e aponte `NODE_EXTRA_CA_CERTS` para o arquivo **na linha de comando**, não no `.env` — o Node lê essa variável na inicialização, antes de o `.env` ser aplicado.
+
 ## Estrutura do projeto
 
 ```
