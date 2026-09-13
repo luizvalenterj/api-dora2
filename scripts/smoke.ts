@@ -22,6 +22,7 @@ const service = createSearchService(
     apiKey: env.ALGOLIA_SEARCH_API_KEY,
     indexName: env.ALGOLIA_INDEX_NAME,
     timeoutMs: env.ALGOLIA_TIMEOUT_MS,
+    proxyUrl: env.PROXY_URL,
   }),
 );
 

@@ -38,6 +38,17 @@ describe("loadEnv", () => {
     expect(env.ALGOLIA_TIMEOUT_MS).toBe(1500);
   });
 
+  it("expoe o proxy de saida, com HTTPS_PROXY tendo precedencia", () => {
+    expect(loadEnv({ ...REQUIRED }).PROXY_URL).toBeUndefined();
+    expect(loadEnv({ ...REQUIRED, HTTP_PROXY: "http://proxy:8080" }).PROXY_URL).toBe(
+      "http://proxy:8080",
+    );
+    expect(
+      loadEnv({ ...REQUIRED, HTTP_PROXY: "http://proxy:8080", HTTPS_PROXY: "http://seguro:3128" })
+        .PROXY_URL,
+    ).toBe("http://seguro:3128");
+  });
+
   it("falha com mensagem clara quando falta variavel obrigatoria", () => {
     expect(() => loadEnv({ ALGOLIA_APP_ID: "APPID123" })).toThrow(/ALGOLIA_SEARCH_API_KEY/);
   });

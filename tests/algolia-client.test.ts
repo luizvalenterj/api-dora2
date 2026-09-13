@@ -49,6 +49,31 @@ describe("createAlgoliaClient", () => {
     });
   });
 
+  it("nao anexa dispatcher quando nao ha proxy configurado", async () => {
+    const fetchImpl = vi.fn(async () => jsonResponse({ hits: [], nbHits: 0, processingTimeMS: 1 }));
+    const client = createAlgoliaClient({ ...CONFIG, fetchImpl: fetchImpl as unknown as typeof fetch });
+
+    await client({ query: "x" });
+
+    const call = fetchImpl.mock.calls[0] as unknown as [string, Record<string, unknown>];
+    expect(call[1]).not.toHaveProperty("dispatcher");
+  });
+
+  it("usa um dispatcher de proxy quando proxyUrl esta configurado", async () => {
+    const fetchImpl = vi.fn(async () => jsonResponse({ hits: [], nbHits: 0, processingTimeMS: 1 }));
+    const client = createAlgoliaClient({
+      ...CONFIG,
+      proxyUrl: "http://proxy.empresa.local:8080",
+      fetchImpl: fetchImpl as unknown as typeof fetch,
+    });
+
+    await client({ query: "x" });
+
+    const call = fetchImpl.mock.calls[0] as unknown as [string, Record<string, unknown>];
+    expect(call[1]).toHaveProperty("dispatcher");
+    expect(call[1]["dispatcher"]).toBeDefined();
+  });
+
   it("normaliza a resposta e preserva facets", async () => {
     const fetchImpl = vi.fn(async () =>
       jsonResponse({

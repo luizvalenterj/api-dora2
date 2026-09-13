@@ -119,6 +119,7 @@ Copie `.env.example` e preencha. As variáveis são validadas com Zod no startup
 | `NODE_ENV` | não | `development` | `development` \| `test` \| `production` |
 | `PORT` | não | `3000` | Porta HTTP (o Render injeta a sua) |
 | `HOST` | não | `127.0.0.1` local / `0.0.0.0` em produção | Interface de escuta |
+| `HTTPS_PROXY` / `HTTP_PROXY` | não | — | Proxy de saída, quando a rede exige um. `HTTPS_PROXY` tem precedência |
 
 As credenciais do Algolia ficam confinadas ao módulo `src/services/algolia-client.ts` e nunca são logadas nem devolvidas em respostas de erro. O agente recebe apenas o `API_ACCESS_KEY`.
 
@@ -491,7 +492,28 @@ NODE_EXTRA_CA_CERTS=/caminho/para/raiz-corporativa.pem npm start
 
 Nunca use `NODE_TLS_REJECT_UNAUTHORIZED=0`: isso desliga a verificação de certificado para todas as conexões do processo.
 
-**Proxy explícito:** o `fetch` do Node 22 **ignora** `HTTP_PROXY`/`HTTPS_PROXY` — diferente do curl e do navegador. Se a saída da sua rede exige proxy, a aplicação precisa de um `ProxyAgent` (pacote `undici`); hoje ela não tem isso.
+### Rede que exige proxy
+
+O `fetch` do Node **ignora** `HTTP_PROXY`/`HTTPS_PROXY` por conta própria, e o curl não usa o proxy do sistema (WPAD/PAC) — só variáveis de ambiente. Por isso é comum o navegador funcionar enquanto Node e curl falham com `fetch failed`.
+
+A aplicação aplica o proxy explicitamente: basta definir a variável no `.env`.
+
+```env
+HTTPS_PROXY=http://proxy.empresa.local:8080
+```
+
+Para descobrir o endereço no Windows:
+
+```powershell
+netsh winhttp show proxy
+Get-ItemProperty 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Internet Settings' |
+  Select-Object ProxyEnable, ProxyServer, AutoConfigURL
+npm config get https-proxy
+```
+
+Se só aparecer `AutoConfigURL`, a rede usa PAC: abra essa URL no navegador e procure o `PROXY host:porta` correspondente.
+
+Com proxy configurado, o log de inicialização registra `outbound requests go through a proxy`, e uma recusa do próprio proxy aparece como `Proxy response (403) !== 200 when HTTP Tunneling`.
 
 ## Estrutura do projeto
 

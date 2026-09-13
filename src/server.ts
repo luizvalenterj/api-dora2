@@ -11,6 +11,7 @@ async function main(): Promise<void> {
     apiKey: env.ALGOLIA_SEARCH_API_KEY,
     indexName: env.ALGOLIA_INDEX_NAME,
     timeoutMs: env.ALGOLIA_TIMEOUT_MS,
+    proxyUrl: env.PROXY_URL,
   });
 
   const app = buildApp({
@@ -25,6 +26,10 @@ async function main(): Promise<void> {
       },
     },
   });
+
+  if (env.PROXY_URL !== undefined) {
+    app.log.info({ proxy: env.PROXY_URL }, "outbound requests go through a proxy");
+  }
 
   if (env.API_ACCESS_KEY === undefined) {
     app.log.warn("API_ACCESS_KEY is not set: /v1/search is running without authentication.");

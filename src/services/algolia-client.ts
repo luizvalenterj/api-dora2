@@ -1,3 +1,4 @@
+import { fetch as undiciFetch, ProxyAgent } from "undici";
 import { AppError } from "../errors/app-error.js";
 import type { AlgoliaResponse, AlgoliaSearchFn, AlgoliaSearchParams } from "../types/algolia.js";
 
@@ -6,8 +7,23 @@ export interface AlgoliaClientConfig {
   apiKey: string;
   indexName: string;
   timeoutMs: number;
+  /**
+   * Proxy de saida (ex.: `http://proxy.empresa:8080`). Quando ausente, a
+   * conexao e direta. O `fetch` do Node nao le HTTP(S)_PROXY sozinho.
+   */
+  proxyUrl?: string | undefined;
   /** Injetavel apenas para teste; em producao usa o fetch nativo do Node. */
   fetchImpl?: typeof fetch;
+}
+
+/**
+ * `dispatcher` existe no fetch do Node (undici) mas nao no tipo `RequestInit`
+ * padrao, e os tipos do pacote `undici` colidem com os embutidos no
+ * @types/node. A conversao fica isolada nesta funcao.
+ */
+function withDispatcher(init: RequestInit, dispatcher: unknown): RequestInit {
+  if (dispatcher === undefined) return init;
+  return { ...init, dispatcher } as unknown as RequestInit;
 }
 
 interface AlgoliaQueryPayload {
@@ -86,24 +102,38 @@ export function createAlgoliaClient(config: AlgoliaClientConfig): AlgoliaSearchF
     config.indexName,
   )}/query`;
 
+  // Um unico agente para todas as chamadas: reaproveita conexao com o proxy.
+  const dispatcher = config.proxyUrl === undefined ? undefined : new ProxyAgent(config.proxyUrl);
+
+  // O ProxyAgent do pacote `undici` nao e aceito pelo fetch global do Node,
+  // que embute outra versao do undici. Com proxy, usamos o fetch do pacote.
+  const defaultFetch =
+    dispatcher === undefined ? globalThis.fetch : (undiciFetch as unknown as typeof fetch);
+
   return async function searchAlgolia(params: AlgoliaSearchParams): Promise<AlgoliaResponse> {
-    const doFetch = config.fetchImpl ?? globalThis.fetch;
+    const doFetch = config.fetchImpl ?? defaultFetch;
     const controller = new AbortController();
     const timeout = setTimeout(() => {
       controller.abort();
     }, config.timeoutMs);
 
     try {
-      const response = await doFetch(url, {
-        method: "POST",
-        headers: {
-          "X-Algolia-Application-Id": config.appId,
-          "X-Algolia-API-Key": config.apiKey,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(buildPayload(params)),
-        signal: controller.signal,
-      });
+      const response = await doFetch(
+        url,
+        withDispatcher(
+          {
+            method: "POST",
+            headers: {
+              "X-Algolia-Application-Id": config.appId,
+              "X-Algolia-API-Key": config.apiKey,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(buildPayload(params)),
+            signal: controller.signal,
+          },
+          dispatcher,
+        ),
+      );
 
       if (!response.ok) {
         // Trecho do corpo vai so para o log: e o que diferencia erro de

@@ -24,10 +24,18 @@ const envSchema = z.object({
   ALGOLIA_TIMEOUT_MS: z.coerce.number().int().min(100).max(60_000).default(8000),
 
   API_ACCESS_KEY: z.string().min(1).optional(),
+
+  /**
+   * Proxy de saida, quando a rede exige um. O `fetch` do Node ignora estas
+   * variaveis por conta propria — a aplicacao precisa aplica-las na mao.
+   */
+  HTTPS_PROXY: z.string().url().optional(),
+  HTTP_PROXY: z.string().url().optional(),
 })
   .transform((values) => ({
     ...values,
     HOST: values.HOST ?? (values.NODE_ENV === "production" ? "0.0.0.0" : "127.0.0.1"),
+    PROXY_URL: values.HTTPS_PROXY ?? values.HTTP_PROXY,
   }));
 
 export type Env = z.infer<typeof envSchema>;
